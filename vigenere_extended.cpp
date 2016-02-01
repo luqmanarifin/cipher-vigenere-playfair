@@ -3,12 +3,13 @@
 using namespace std;
 
 #define byte unsigned char
-#define 30 MAX_KEY_LENGTH
+#define MAX_KEY_LENGTH 30
 
 byte* encrypt(byte* plain, byte* key) {
-  int length = strlen(plain);
-  int keylen = strlen(key);
+  int length = strlen((char*) plain);
+  int keylen = strlen((char*) key);
   byte* cipher = new byte[length];
+  cout << "panjang plain " << length << endl;
   for(int i = 0; i < length; i++) {
     cipher[i] = (plain[i] + key[i % keylen]) % 256;
   }
@@ -16,8 +17,8 @@ byte* encrypt(byte* plain, byte* key) {
 }
 
 byte* decrypt(byte* cipher, byte* key) {
-  int length = strlen(cipher);
-  int keylen = strlen(key);
+  int length = strlen((char*) cipher);
+  int keylen = strlen((char*) key);
   byte* plain = new byte[length];
   for(int i = 0; i < length; i++) {
     plain[i] = (cipher[i] - key[i % keylen] + 256) % 256;
@@ -25,31 +26,35 @@ byte* decrypt(byte* cipher, byte* key) {
   return plain;
 }
 
-byte* read_text(int argc, char** argv, byte* type) {
+byte* read_text(int argc, char** argv) {
   ifstream ifs(argv[2], ios::binary | ios::ate);
-  ifstream length = ifs.tellg();
+  ifstream::pos_type length = ifs.tellg();
   
-  byte* buffer = new byte[length];
+  int len = (int) length;
+  cout << "panjang " << len << endl;
+
+  char* buffer = new char[len];
   ifs.seekg(0, ios::beg);
-  ifs.read(buffer, length);
-  return buffer;
+  ifs.read(buffer, len);
+  cout << "panjang buffer " << strlen(buffer) << endl; 
+  return (byte*) buffer;
 }
 
 byte* read_key() {
-  byte* key = new byte[MAX_KEY_LENGTH];
+  char* key = new char[MAX_KEY_LENGTH];
   cout << "Enter key: ";
   gets(key);
-  return key;
+  return (byte*) key;
 }
 
 void flush_to_file(byte* output) {
-  byte* name = new byte[MAX_KEY_LENGTH * MAX_KEY_LENGTH];
+  char* name = new char[MAX_KEY_LENGTH * MAX_KEY_LENGTH];
   cout << "Enter name file: ";
   gets(name);
 
   ofstream file;
   file.open(name);
-  int len = strlen(output);
+  int len = strlen((char*) output);
   for(int i = 0; i < len; i++) {
     file << output[i];
   }
@@ -62,17 +67,18 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  byte* str, key;
+  byte* str = new byte[MAX_KEY_LENGTH];
+  byte* key = new byte[MAX_KEY_LENGTH];
 
   if(strcmp(argv[1], "encrypt") == 0) { 
-    str = read_text(argc, argv, "plain");
+    str = read_text(argc, argv);
     key = read_key();
-    byte* cipher = encrypt(str, key);
+    byte* cipher = (byte*) encrypt(str, key);
     flush_to_file(cipher);
   } else {
-    str = read_text(argc, argv, "cipher");
+    str = read_text(argc, argv);
     key = read_key();
-    byte* plain = decrypt(str, key);
+    byte* plain = (byte*) decrypt(str, key);
     flush_to_file(plain);
   }
 
