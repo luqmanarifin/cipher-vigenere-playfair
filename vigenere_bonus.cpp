@@ -23,57 +23,55 @@ vector<byte> decrypt(vector<byte> cipher, vector<byte> key) {
   return plain;
 }
 
-vector<byte> read_text(int argc, char** argv, string type) {
-  string str;
-  if(argc == 2) {
-    cout << "Enter " << type << " text:" << endl;
-    getline(cin, str);
-  } else {
-    ifstream file(argv[2]);
-    string buf((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());;
-    str = buf;
+int getFileSize(FILE* file) {
+  int l = ftell(file);
+  fseek(file, 0, 2);
+  int r = ftell(file);
+  fseek(file, l, 0);
+  return r;
+}
+
+vector<byte> read_text(int argc, char** argv) {
+  FILE* file = NULL;
+  vector<byte> plain;
+  assert(file = fopen(argv[2], "rb"));
+  int fileSize = getFileSize(file);
+  byte* filebuf = new byte[fileSize];
+  fread(filebuf, fileSize, 1, file);
+  for(int i = 0; i < fileSize; i++) {
+    plain.push_back((byte) filebuf[i]);
   }
-  vector<byte> ret;
-  for(int i = 0; i < str.size(); i++) {
-    ret.push_back((byte) str[i]);
-  }
-  return ret;
+  return plain;
 }
 
 vector<byte> read_key() {
-  string key;
+  char* key = new char[MAX_KEY_LENGTH];
   cout << "Enter key: ";
-  getline(cin, key);
-
+  gets(key);
+  int len = strlen(key);
   vector<byte> ret;
-  for(int i = 0; i < key.size(); i++) {
-    ret.push_back(key[i]);
+  for(int i = 0; i < len; i++) {
+    ret.push_back((byte) key[i]);
   }
   return ret;
-}
-
-void print_result(string type, vector<byte> result) {
-  cout << endl << type << " text:" << endl;
-  for(int i = 0; i < result.size(); i++) {
-    cout << result[i];
-  }
-  cout << endl;
 }
 
 void flush_to_file(vector<byte> output) {
   char* name = new char[MAX_KEY_LENGTH * MAX_KEY_LENGTH];
   cout << "Enter name file: ";
   gets(name);
-  ofstream file;
-  file.open(name);
-  for(int i = 0; i < output.size(); i++) {
-    file << output[i];
-  }
+  cout << printf("Flushing %d bytes to %s\n", output.size(), name);
+
+  FILE* file;
+  file = fopen(name, "wb");
+  char* buffer = new char[output.size()];
+  for(int i = 0; i < output.size(); i++) buffer[i] = output[i];
+  fwrite(buffer, sizeof(byte), output.size(), file);
 }
 
 int main(int argc, char** argv) {
-  if(argc > 3 || strcmp(argv[0], "ascii")) {
-    cout << "Usage : ascii [encrypt / decrypt] [file_name.in])" << endl;
+  if(argc > 3 || strcmp(argv[0], "bonus")) {
+    cout << "Usage : bonus [encrypt / decrypt] [file_name.in])" << endl;
     cout << "File name [OPTIONAL]" << endl;
     return 0;
   }
@@ -81,16 +79,14 @@ int main(int argc, char** argv) {
   vector<byte> str, key;
 
   if(strcmp(argv[1], "encrypt") == 0) { 
-    str = read_text(argc, argv, "plain");
+    str = read_text(argc, argv);
     key = read_key();
     vector<byte> cipher = (vector<byte>) encrypt(str, key);
-    print_result("cipher", cipher);
     flush_to_file(cipher);
   } else {
-    str = read_text(argc, argv, "cipher");
+    str = read_text(argc, argv);
     key = read_key();
     vector<byte> plain = (vector<byte>) decrypt(str, key);
-    print_result("plain", plain);
     flush_to_file(plain);
   }
 
