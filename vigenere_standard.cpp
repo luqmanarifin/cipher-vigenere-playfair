@@ -122,6 +122,5 @@ int main(int argc, char** argv) {
     print_result("plain", plain);
     flush_to_file(plain);
   }
-
   return 0;
 }

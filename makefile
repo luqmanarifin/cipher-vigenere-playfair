@@ -6,3 +6,6 @@ ascii: vigenere_extended.cpp
 
 bonus: vigenere_bonus.cpp
 	g++ vigenere_bonus.cpp -o bonus -std=c++11
+
+playfair: playfair.cpp
+	g++ playfair.cpp -o playfair -std=c++11
